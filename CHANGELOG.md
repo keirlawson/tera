@@ -22,6 +22,7 @@ the code already only really look there.
 - You can now use glob patterns in Tera::new
 - `default` filter now works on Null values
 - Literal numbers in template overflowing i64/f64 will now be replaced by `0` instead of panicking
+- Add a `Tera::render_string` method, similar to `Tera::one_off` but that works on an existing Tera instance
 
 ## 0.11.20 (2018-11-14)
 

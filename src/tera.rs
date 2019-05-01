@@ -330,6 +330,33 @@ impl Tera {
         renderer.render()
     }
 
+    /// Renders a template from a string.
+    /// The template will be added temporarily to the instance and named `one_off`.
+    /// After the rendering (whether successful or not), the template will be removed from the instance.
+    ///
+    /// ```rust,ignore
+    /// // Rendering a template with a struct that impl `Serialize`
+    /// tera.render_string("{{ some_ident | snake_case }}", context, false);
+    /// ```
+    pub fn render_string(&mut self, template: &str, context: Context, autoescape: bool) -> Result<String> {
+        self.add_raw_template("one_off", template)?;
+        let autoescape_suffixes = self.autoescape_suffixes.clone();
+        if autoescape {
+            self.autoescape_on(vec!["one_off"]);
+        }
+        let res = match self.render("one_off", context) {
+            Ok(s) => s,
+            Err(e) => {
+                self.autoescape_on(autoescape_suffixes);
+                self.remove_template("one_off")?;
+                return Err(e);
+            }
+        };
+        self.autoescape_on(autoescape_suffixes);
+        self.remove_template("one_off")?;
+        Ok(res)
+    }
+
     /// Renders a one off template (for example a template coming from a user input) given a `Context`
     ///
     /// This creates a separate instance of Tera with no possibilities of adding custom filters
@@ -373,6 +400,7 @@ impl Tera {
 
         tera.render_value("one_off", data)
     }
+
     #[doc(hidden)]
     #[inline]
     pub fn get_template(&self, template_name: &str) -> Result<&Template> {
@@ -380,6 +408,14 @@ impl Tera {
             Some(tpl) => Ok(tpl),
             None => Err(Error::template_not_found(template_name)),
         }
+    }
+
+    /// Only used in `render_string` to remove a template from the instance after it got rendered
+    fn remove_template(&mut self, name: &str) -> Result<()> {
+        self.templates.remove(name);
+        self.build_inheritance_chains()?;
+        self.check_macro_files()?;
+        Ok(())
     }
 
     /// Add a single template to the Tera instance
@@ -995,6 +1031,15 @@ mod tests {
 
         assert!(tera.get_template("base.html").is_ok());
         assert!(tera.get_template("one").is_ok());
+    }
+
+    #[test]
+    fn can_render_string_in_tera_instance() {
+        let mut tera = Tera::new("examples/basic/templates/**/*").unwrap();
+        let res = tera.render_string("hello world", Context::new(), false);
+        assert_eq!(res.unwrap(), "hello world");
+        assert!(tera.render("one_off", Context::new()).is_err());
+
     }
 
     #[should_panic]
