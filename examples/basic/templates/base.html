@@ -7,6 +7,10 @@
     Sorry, my_var isn't defined.
 {% endif %}
 
+{% if username in ["Bob", "Cathy"] %}
+Welcome, Bob or Cathy
+{% endif %}
+
 {% if not show_all %}
     See more
 {% endif %}

@@ -579,6 +579,7 @@ impl Tera {
         self.register_tester("ending_with", testers::ending_with);
         self.register_tester("containing", testers::containing);
         self.register_tester("matching", testers::matching);
+        self.register_tester("in", testers::in_array);
     }
 
     fn register_tera_functions(&mut self) {

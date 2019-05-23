@@ -123,6 +123,17 @@ pub fn divisible_by(value: Option<&Value>, params: &[Value]) -> Result<bool> {
     }
 }
 
+//FIXME document
+pub fn in_array(value: Option<&Value>, params: &[Value]) -> Result<bool> {
+    number_args_allowed("in", 1, params.len())?;
+    value_defined("in", value)?;
+
+    match params.first().unwrap() {
+        Value::Array(items) => Ok(items.contains(value.unwrap())),
+        _ => Err(Error::msg("Tester `in` was called with a parameter that isn't an array"))
+    }
+}
+
 /// Returns true if `value` can be iterated over in Tera (ie is an array/tuple).
 /// Otherwise, returns false.
 pub fn iterable(value: Option<&Value>, params: &[Value]) -> Result<bool> {
